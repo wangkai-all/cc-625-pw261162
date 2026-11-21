@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>样品试吃归因台 · 本地演示</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#results">跳到业务结果</a>
+
+  <header class="masthead">
+    <div class="masthead-inner">
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true"></span>
+        <div>
+          <h1>样品试吃归因台</h1>
+          <p class="brand-sub">派发、购买、退单分开记账 · 全部为虚构数据</p>
+        </div>
+      </div>
+      <button id="theme-toggle" class="ghost-btn" type="button" aria-pressed="false">深色</button>
+    </div>
+  </header>
+
+  <div class="rules-bar">
+    <p>
+      <strong>固定口径</strong>
+      订单前 30 天窗口（UTC 自然日对齐） · 同人同口味同分钟只留一条 ·
+      退单只冲原订单 · 迟交退单进新报表，旧报表保留 ·
+      <span class="caveat">所有数字只是关联，不是因果增量</span>
+    </p>
+  </div>
+
+  <section class="action-bar" aria-label="操作">
+    <div class="actions">
+      <button id="btn-compare" class="btn primary" type="button">生成原复购比较</button>
+      <button id="btn-refund" class="btn" type="button">补交一张退单</button>
+      <button id="btn-detail" class="btn" type="button">查看归因明细</button>
+    </div>
+    <p id="action-status" class="action-status" role="status" aria-live="polite">正在载入报表…</p>
+  </section>
+
+  <main
+    id="results"
+    class="results"
+    data-evidence-result
+    data-evidence-state="loading"
+    data-evidence-published-at=""
+    data-evidence-current-as-of=""
+    data-evidence-submitted-refunds="0"
+    data-evidence-net-first=""
+    data-evidence-net-sequence=""
+    data-evidence-net-first-published=""
+    data-evidence-net-sequence-published=""
+    data-evidence-revision-net-first="0"
+    data-evidence-revision-net-sequence="0"
+    data-evidence-comparison-orders=""
+    data-evidence-detail-mode="">
+
+    <section class="kpi-grid" id="kpis" aria-label="关键数字">
+      <div class="kpi skeleton"></div>
+      <div class="kpi skeleton"></div>
+      <div class="kpi skeleton"></div>
+      <div class="kpi skeleton"></div>
+    </section>
+
+    <section class="panel" id="panel-revision" aria-labelledby="revision-title">
+      <header class="panel-head">
+        <div>
+          <h2 id="revision-title">两版报表对照</h2>
+          <p class="panel-sub">旧报表发布后不再改写；新报表逐笔说明哪笔复购回了头。</p>
+        </div>
+        <div class="mode-tabs" role="tablist" aria-label="归因口径">
+          <button class="mode-tab is-active" type="button" role="tab" aria-selected="true" data-mode="first">首次试吃</button>
+          <button class="mode-tab" type="button" role="tab" aria-selected="false" data-mode="sequence">按顺序分配</button>
+        </div>
+      </header>
+      <div id="revision-body" class="panel-body">
+        <p class="empty-state">载入中…</p>
+      </div>
+    </section>
+
+    <section class="panel" id="panel-compare" aria-labelledby="compare-title" hidden>
+      <header class="panel-head">
+        <div>
+          <h2 id="compare-title">首次试吃 vs 按顺序分配</h2>
+          <p class="panel-sub" id="compare-sub">两种口径对同一批订单的分配结果。</p>
+        </div>
+        <span class="chip neutral" id="compare-chip">—</span>
+      </header>
+      <div id="compare-body" class="panel-body"></div>
+    </section>
+
+    <section class="panel" id="panel-detail" aria-labelledby="detail-title" hidden>
+      <header class="panel-head">
+        <div>
+          <h2 id="detail-title">归因逐笔明细</h2>
+          <p class="panel-sub" id="detail-sub">窗口、试吃来源、退单冲减逐行列出。</p>
+        </div>
+        <span class="chip neutral" id="detail-chip">—</span>
+      </header>
+      <div id="detail-body" class="panel-body"></div>
+    </section>
+
+    <section class="panel" id="panel-anomaly" aria-labelledby="anomaly-title">
+      <header class="panel-head">
+        <div>
+          <h2 id="anomaly-title">规则捉到的异常</h2>
+          <p class="panel-sub">去重、拒收退单、未归因购买都留痕，不做静默丢弃。</p>
+        </div>
+      </header>
+      <div id="anomaly-body" class="panel-body"></div>
+    </section>
+
+    <section class="panel method" aria-labelledby="method-title">
+      <header class="panel-head">
+        <div>
+          <h2 id="method-title">口径说明</h2>
+          <p class="panel-sub">读数字之前先读规则；它们是人为固定的，不是数据自己长出来的。</p>
+        </div>
+      </header>
+      <div class="method-grid">
+        <div>
+          <h3>固定窗口</h3>
+          <p>订单发生前 30 天，起点按 UTC 自然日对齐，左闭右开。样品时间必须严格早于订单时间。窗口外的试吃不参与归因，但会单独列出。</p>
+        </div>
+        <div>
+          <h3>去重</h3>
+          <p>同一人、同一类型、同一口味、同一 UTC 分钟的重复录入只保留最早录入的一条；退单按原订单号判重。被去掉的记录在「规则捉到的异常」里可见。</p>
+        </div>
+        <div>
+          <h3>两种口径</h3>
+          <p><strong>首次试吃：</strong>窗口内最早一次试吃拿走该人全部订单。<strong>按顺序分配：</strong>每笔购买按时间依次领取一次未用过的在先试吃；用完后复购归给最近一次试吃。</p>
+        </div>
+        <div>
+          <h3>退单与版本</h3>
+          <p>退单只冲它指向的那一笔，整单退、净额归零，不挪到别的订单上。业务时间早于上一版报表、录入却晚于它的退单，只能出现在新报表里；旧报表原样保留，新报表逐笔列出差额。</p>
+        </div>
+        <div class="caveat-block">
+          <h3>只是关联</h3>
+          <p>窗口长度、去重规则、口径选择都会改变口味之间的分配。这里没有对照组，也没有随机分配，任何「试吃带来多少复购」的读法都超出了数据能支持的范围。能说的是：在这套固定规则下，哪些订单被归给了哪次试吃。</p>
+        </div>
+      </div>
+    </section>
+
+    <noscript>
+      <section class="panel"><p class="empty-state">这个演示页需要 JavaScript 才能读取本地服务的数据。</p></section>
+    </noscript>
+  </main>
+
+  <footer class="page-foot">
+    <p>本地演示 · Node.js 内置模块 · 数据全部虚构 · 不写入磁盘</p>
+  </footer>
+
+  <div id="tooltip" class="tooltip" role="tooltip" hidden></div>
+  <script src="/app.js"></script>
+</body>
+</html>
